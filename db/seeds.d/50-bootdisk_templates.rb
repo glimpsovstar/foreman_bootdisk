@@ -39,6 +39,23 @@ ProvisioningTemplate.without_auditing do
   tmpl.locked = true
   tmpl.save!(:validate => false) if tmpl.changes.present?
 
+  content = File.read(File.join(ForemanBootdisk::Engine.root, 'app', 'views', 'foreman_bootdisk', 'generic_boot_no_dhcp.erb'))
+  created << 'Boot disk iPXE - Generic bootdisk without DHCP' unless ProvisioningTemplate.find_by_name('Boot disk iPXE - Generic bootdisk without DHCP')
+  tmpl = ProvisioningTemplate.unscoped.where(:name => 'Boot disk iPXE - Generic bootdisk without DHCP').first_or_create do |template|
+    template.attributes = {
+      :template_kind_id => kind.id,
+      :snippet => false,
+      :template => content
+    }
+  end
+  tmpl.attributes = {
+    :template => content,
+    :default  => true,
+    :vendor   => "Foreman boot disk",
+  }
+  tmpl.locked = true
+  tmpl.save!(:validate => false) if tmpl.changes.present?
+    
   ProvisioningTemplate.unscoped.where(:name => created, :default => true).each do |tmpl|
     tmpl.organizations = organizations if SETTINGS[:organizations_enabled]
     tmpl.locations = locations if SETTINGS[:locations_enabled]
